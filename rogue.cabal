@@ -2,10 +2,10 @@ name:                rogue
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            http://github.com/githubuser/rogue#readme
+homepage:            https://github.com/ChShersh/rogue-lang
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
+author:              Dmitry Kovanikov
 maintainer:          example@example.com
 copyright:           2016 Author Here
 category:            Web
@@ -34,7 +34,7 @@ library
                      , llvm-general-pure
   default-language:    Haskell2010
 
-executable rogue-exe
+executable roguec
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded 
@@ -59,4 +59,4 @@ test-suite rogue-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/rogue
+  location: https://github.com/ChShersh/rogue-lang

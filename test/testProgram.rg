@@ -5,60 +5,65 @@
 
 // mut v: Bool = 0
 
-foo : (a: Int) -> (b: Int) -> Int {
-    let x: Int = a + b
-    let t: Int = b
-    foo 1 x // 1 2
-    foo t x // 1 2
-    return x
-}
+// foo : (a: Int) -> (b: Int) -> Int {
+//     let x: Int = a + b
+//     let t: Int = b
+//     foo 1 x // 1 2
+//     foo t x // 1 2
+//     return x
+// }
 
-bar : (c: Int) -> Unit {
-    return 
-}
+// bar : (c: Int) -> Unit {
+//     return 
+// }
 
-zoo : (a: Int) -> (b: Int) -> Unit {
-    let z: Bool = a < -b || !(a >= b)
-    let t: Int = 5
-    zoo2 z
-}
+// zoo : (a: Int) -> (b: Int) -> Unit {
+//     let z: Bool = a < -b || !(a >= b)
+//     let t: Int = 5
+//     zoo2 z
+// }
 
-zoo2 : (f: Bool) -> Bool {
+// zoo2 : (f: Bool) -> Bool {
+//     let x: Int = 5
+//     x = x + 1
+//     return f
+// }
+
+// testIf : (b: Bool) -> Int {
+//     let x: Int = 5
+//     // if b {
+//     //     x = 10
+//     // } else {
+//     //     x = 5
+//     // }
+
+//     if !b || b {
+//         x = x + 1
+//     } else {
+//         x = x - 2
+//         return x
+//     }
+// }
+
+testWhile : Unit {
     let x: Int = 5
-    x = x + 1
-    return f
-}
-
-testIf : (b: Bool) -> Int {
-    let x: Int = 5
-    if b {
-        x = 10
-    } else {
-        x = 5
-    }
-
-    if !b || b {
-        x = x + 1
-    } else {
-        x = x - 2
-        return x
-    }
 
     while x >= 10 {
         x = x - 1
+        return
     }
 
     while x % 2 == 0 {
         x = 3 * x / 2 + 1
     }
 
-    return x
+    return x  
 }
 
-main : Int {
-    foo 2 3 //2 3
-    return 1
-}
+// main : Int {
+//     foo 2 3 //2 3
+//     return 1
+// }
 
 /*
 ; ModuleID = 'my first module'

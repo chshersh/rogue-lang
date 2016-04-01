@@ -162,10 +162,13 @@ namedInstruction Nothing instruction = do
 
 
 terminator :: Named Terminator -> Codegen (Named Terminator)
-terminator trm = do
-    blk <- current
-    modifyBlock (blk { term = Just trm })
-    return trm
+terminator newTerminator = do
+    curBlock <- current
+    case term curBlock of
+        t@(Just oldTerminator) -> return oldTerminator
+        Nothing                -> do 
+            modifyBlock (curBlock { term = Just newTerminator })
+            return newTerminator
 
 -------------------------------------------------------------------------------
 -- Block Stack

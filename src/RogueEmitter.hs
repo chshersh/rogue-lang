@@ -48,16 +48,17 @@ codegenTopLevel (S.FunDef name arguments returnType funBody) = defineFunction na
             updateNameMap argName
             assign argName var
 
-        genBlockBody funBody
+        genBlockBody True funBody
 
 -------------------------------------------------------------------------------
 -- Operations
 -------------------------------------------------------------------------------
-genBlockBody :: S.Statements -> Codegen ()
-genBlockBody []                           = ret Nothing          >> return ()
-genBlockBody (res@(S.Ret _) :         []) = codegenStatement res >> return ()
-genBlockBody (    (S.Ret _) :          _) = error "return expression not in the end of block (unreachable block)"
-genBlockBody (innerStmt     : restInners) = codegenStatement innerStmt >> genBlockBody restInners
+genBlockBody :: Bool -> S.Statements -> Codegen ()
+genBlockBody True  []                           = ret Nothing >> return ()
+genBlockBody False []                           = return ()
+genBlockBody _     (res@(S.Ret _) :         []) = codegenStatement res
+genBlockBody _     (    (S.Ret _) :          _) = error "return expression not in the end of block (unreachable block)"
+genBlockBody isFun (innerStmt     : restInners) = codegenStatement innerStmt >> genBlockBody isFun restInners
 
 codegenStatement :: S.Statement -> Codegen ()
 codegenStatement (S.Def (S.VarDef _ varName (Just varType) varValue)) = do -- TODO: no Just, ignore mutability for now
@@ -86,13 +87,13 @@ codegenStatement (S.If cond ifThen ifElse) = do
 
     -- if-then block
     setBlock ifThenBlock
-    genBlockBody ifThen
+    genBlockBody False ifThen
     br ifMergeBlock
     ifThenBlock <- getBlock
 
     -- if-else block
     setBlock ifElseBlock
-    genBlockBody ifElse
+    genBlockBody False ifElse
     br ifMergeBlock
     ifElseBlock <- getBlock
 
@@ -101,24 +102,27 @@ codegenStatement (S.If cond ifThen ifElse) = do
     return ()
 
 codegenStatement (S.While cond whileTrue) = do
+    condBlock  <- addBlock "while.cond"
     whileBlock <- addBlock "while.loop"
     exitBlock  <- addBlock "while.end"
 
-    -- cond
+    br condBlock
+
+    -- while-cond
+    setBlock condBlock
     cgenCond <- cgenExpr cond
     cbr cgenCond whileBlock exitBlock
+    condBlock <- getBlock
 
     -- while-true
     setBlock whileBlock
-    genBlockBody whileTrue
-    cgenCond <- cgenExpr cond
-    cbr cgenCond whileBlock exitBlock
+    genBlockBody False whileTrue
+    br condBlock
     whileBlock <- getBlock
 
     -- exit block
     setBlock exitBlock
     return ()
-
 
 codegenStatement (S.Ret Nothing)        = ret Nothing >> return ()
 codegenStatement (S.Ret (Just retExpr)) = do
