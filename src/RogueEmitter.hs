@@ -12,7 +12,7 @@ import           Data.Int
 import           Control.Monad.Except
 import           Control.Applicative
 import           Data.Map (Map)
-import qualified Data.Map                   as Map
+import qualified Data.Map                  as Map
 
 import           LLVM.General.Module
 import           LLVM.General.Context
@@ -22,14 +22,21 @@ import qualified LLVM.General.AST.Constant as C
 import qualified LLVM.General.AST.Type     as T
 
 import           RogueTokens
-import qualified RogueAST                   as S
+import qualified RogueAST                  as S
 import           RogueCodegen
 
 toLLVMTypeSignature :: S.FunctionType -> [(AST.Name, AST.Type)]
 toLLVMTypeSignature = map (bimap AST.Name typeFromToken)
 
 codegenProgram :: S.Program -> LLVM ()
-codegenProgram = mapM_ codegenTopLevel
+codegenProgram program = do
+    defineIOStrVariable ".scanf_str"  "%d\0"
+    defineIOStrVariable ".printf_str" "%d\n\0"
+
+    mapM_ codegenTopLevel program
+
+    declareExternal "scanf"  T.i32 [(AST.Name "", T.ptr T.i8)]
+    declareExternal "printf" T.i32 [(AST.Name "", T.ptr T.i8)]
 
 codegenTopLevel :: S.Declaration -> LLVM ()
 codegenTopLevel (S.VarDef _ _ _ _) = return ()  -- TODO: codegen global variables
@@ -65,6 +72,8 @@ codegenStatement (S.Def (S.VarDef _ varName (Just varType) varValue)) = do -- TO
     let llvmVarType = typeFromToken varType
     var       <- alloca varName llvmVarType
     cgenedVal <- cgenExpr varValue
+    -- v@(AST.ConstantOperand (C.GetElementPtr _ (C.GlobalReference ptrType (AST.Name ".str")) _)) <- cgenExpr varValue
+    -- var       <- alloca varName (T.ptr $ T.i8)
     store var cgenedVal
     assign varName var
 
@@ -89,13 +98,11 @@ codegenStatement (S.If cond ifThen ifElse) = do
     setBlock ifThenBlock
     genBlockBody False ifThen
     br ifMergeBlock
-    ifThenBlock <- getBlock
 
     -- if-else block
     setBlock ifElseBlock
     genBlockBody False ifElse
     br ifMergeBlock
-    ifElseBlock <- getBlock
 
     -- if-merge block
     setBlock ifMergeBlock
@@ -112,13 +119,11 @@ codegenStatement (S.While cond whileTrue) = do
     setBlock condBlock
     cgenCond <- cgenExpr cond
     cbr cgenCond whileBlock exitBlock
-    condBlock <- getBlock
 
     -- while-true
     setBlock whileBlock
     genBlockBody False whileTrue
     br condBlock
-    whileBlock <- getBlock
 
     -- exit block
     setBlock exitBlock
@@ -162,6 +167,16 @@ cgenExpr (S.Power    a b) = cgenBinaryExpr (Map.lookup "**" binaryOpMap) a b
 cgenExpr (S.Negate   a)   = cgenUnaryExpr  (Map.lookup "-"  unaryOpMap)  a
 
 {- Codegen function call -}
+cgenExpr (S.VarOrCall "printf" arguments) = do
+    llvmArguments <- mapM cgenExpr arguments
+    let formatString = AST.ConstantOperand $ C.GetElementPtr True (C.GlobalReference (T.ArrayType 4 T.i8) (AST.Name ".printf_str")) [C.Int 32 0, C.Int 32 0]
+    call (externf (AST.Name "printf")) (formatString : llvmArguments)
+
+cgenExpr (S.VarOrCall "scanf" [S.VarExpr x]) = do
+    varOperand <- lookupSymbolTable x
+    let formatString = AST.ConstantOperand $ C.GetElementPtr True (C.GlobalReference (T.ArrayType 3 T.i8) (AST.Name ".scanf_str")) [C.Int 32 0, C.Int 32 0]
+    call (externf (AST.Name "scanf")) [formatString, varOperand]
+
 cgenExpr (S.VarOrCall funName arguments) = do
     llvmArguments <- mapM cgenExpr arguments
     call (externf (AST.Name funName)) llvmArguments

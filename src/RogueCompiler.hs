@@ -6,9 +6,10 @@ import RogueParser
 import RogueCodegen
 
 -- | Check next kinds of semantic correctness:
--- | * variables are used after their definition  (maybe not on global level),
--- | * check mutability,
--- | * number of arguments passing to function.
+-- * variables are used after their definition  (maybe not on global level),
+-- * convert possible function calls to variables,
+-- * check mutability,
+-- * number of arguments passing to function.
 checkSemantics :: Program -> Program
 checkSemantics = id
 

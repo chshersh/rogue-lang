@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module RogueCodegen where
@@ -9,13 +9,14 @@ import           Control.Monad.State
 
 import           Data.Function
 import           Data.List
+import           Data.Char (ord)
 import           Data.Map (Map)
 import qualified Data.Map                                as Map
 import           Data.String
 
-import           LLVM.General.AST
+import           LLVM.General.AST hiding (type')
 import           LLVM.General.AST.Type                   as T
-import           LLVM.General.AST.Global
+import           LLVM.General.AST.Global                 
 import qualified LLVM.General.AST                        as AST
 
 import qualified LLVM.General.AST.Constant               as C
@@ -38,18 +39,36 @@ runLLVM = flip (execState . unLLVM)
 emptyModule :: Identifier -> AST.Module
 emptyModule label = defaultModule { moduleName = label }
 
-addDefn :: Definition -> LLVM ()
-addDefn d = do
-    defs <- gets moduleDefinitions
-    modify $ \s -> s { moduleDefinitions = defs ++ [d] }
+addDefinition :: Definition -> LLVM ()
+addDefinition newDef = do
+    oldDefinitions <- gets moduleDefinitions
+    modify $ \s -> s { moduleDefinitions = oldDefinitions ++ [newDef] }
 
 defineFunction :: Identifier -> [(Name, Type)] -> Type -> [BasicBlock] -> LLVM ()
-defineFunction funName argTypes retty body = addDefn $
+defineFunction funName argTypes retty body = addDefinition $
     GlobalDefinition $ functionDefaults {
       name        = Name funName
     , parameters  = ([Parameter ty nm [] | (nm, ty) <- argTypes], False)
     , returnType  = retty
     , basicBlocks = body
+    }
+
+declareExternal :: Identifier -> Type -> [(Name, Type)] -> LLVM ()
+declareExternal funName retty argTypes = addDefinition $
+  GlobalDefinition $ functionDefaults {
+    name        = Name funName
+  , parameters  = ([Parameter ty nm [] | (nm, ty) <- argTypes], True)
+  , returnType  = retty
+  , basicBlocks = []
+  }
+
+defineIOStrVariable :: Identifier -> String -> LLVM ()
+defineIOStrVariable varName formatString = addDefinition $
+    GlobalDefinition $ globalVariableDefaults {
+      name        = Name varName
+    , type'       = T.ArrayType (fromIntegral $ length formatString) T.i8
+    , isConstant  = True
+    , initializer = Just $ C.Array T.i8 $ map (C.Int 8 . fromIntegral . ord) formatString   
     }
 
 ---------------------------------------------------------------------------------
@@ -178,13 +197,13 @@ entry :: Codegen Name
 entry = gets currentBlock
 
 addBlock :: Identifier -> Codegen Name
-addBlock bname = do
+addBlock blockName = do
     bls <- gets blocks
     ix  <- gets blockCount
     nms <- gets names
 
     let new = emptyBlock ix
-    let (qname, supply) = uniqueName bname nms
+    let (qname, supply) = uniqueName blockName nms
 
     modify $ \s -> s { blocks = Map.insert (Name qname) new bls
                      , blockCount = ix + 1
@@ -194,9 +213,9 @@ addBlock bname = do
     return (Name qname)
 
 setBlock :: Name -> Codegen Name
-setBlock bname = do
-    modify $ \s -> s { currentBlock = bname }
-    return bname
+setBlock blockName = do
+    modify $ \s -> s { currentBlock = blockName }
+    return blockName
 
 getBlock :: Codegen Name
 getBlock = gets currentBlock

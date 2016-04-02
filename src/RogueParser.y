@@ -96,7 +96,7 @@ VarList : VarSingle                {      [$1] }
         | VarList ',' VarSingle    { $3 :  $1  }
 
 VarSingle :: { Declaration }
-VarSingle : var OptionalType '=' Expr   { VarDef { mutability = TokenLet, name = $1, declaredType = $2, varValue = $4 } }
+VarSingle : var OptionalType '=' Expr   { VarDef { mutability = TokenLet, defName = $1, declaredType = $2, varValue = $4 } }
 
 {- Expression section -}
 Expr :: { Expr }  -- TODO: linebreaks
@@ -122,7 +122,6 @@ Expr : Expr '&&' Expr           { And $1 $3 }
      | int                      { IntConst  $1 }
      | bool                     { BoolConst $1 }
      | var                      { VarExpr   $1 }
---   | FunCall                  {           $1 }
      | '(' Expr ')'             {           $2 }
 
 FunCall :: { Expr }
@@ -148,7 +147,7 @@ FunTypeArguments : {- empty -}                                        {         
 
 {- Function section -}
 FunStmt :: { Program }
-FunStmt : var ':' FunTypeArguments BasicType BlockBody    { [FunDef {name = $1,  arguments = reverse $3, returnType = $4, funBody = $5 }] }
+FunStmt : var ':' FunTypeArguments BasicType BlockBody    { [FunDef {defName = $1,  arguments = reverse $3, returnType = $4, funBody = $5 }] }
 
 BlockBody :: { Statements }
 BlockBody : '{' BodyStmt '}'    { concat $ reverse $2 }

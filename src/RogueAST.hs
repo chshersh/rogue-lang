@@ -9,11 +9,11 @@ type Statements   = [Statement]
 {- Program blocks -}
 data Declaration
     = VarDef { mutability   :: MutabilityToken
-             , name         :: Identifier
+             , defName      :: Identifier
              , declaredType :: Maybe TypeToken
              , varValue     :: Expr
              }
-    | FunDef { name       :: Identifier
+    | FunDef { defName    :: Identifier
              , arguments  :: FunctionType
              , returnType :: TypeToken
              , funBody    :: Statements
