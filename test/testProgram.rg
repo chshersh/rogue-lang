@@ -65,7 +65,7 @@
 main : Unit {
     let x: Int = 0
     
-    scanf x
+    //scanf x
 
     x = x + 10
     

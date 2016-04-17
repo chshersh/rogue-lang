@@ -23,9 +23,7 @@ Produces LLVM-generated code written in test/testProgram.rg
 
 #### Building
 + tests
-+ more friendly run (at least with path to file)
 + [travis](https://travis-ci.org/) building
-+ generate executables (or run result via lli)
 
 #### Features
 + errors handling
@@ -45,7 +43,6 @@ Produces LLVM-generated code written in test/testProgram.rg
 #### Known bugs:
 + not allowed function call assignment to variables
 + make `printf` and `scanf` work for booleans
-
 
 ### Compiler package structure
 > TODO: describe sources

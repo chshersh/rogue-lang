@@ -4,8 +4,6 @@ module RogueEmitter where
 
 import           Control.Monad.State
 
--- import           Debug.Trace
-
 import           Data.Bifunctor (bimap)
 import           Data.Word
 import           Data.Int
@@ -221,18 +219,12 @@ unaryOpMap = Map.fromList [
 -- Compilation
 -------------------------------------------------------------------------------
 
-initModule :: AST.Module
-initModule = emptyModule "my first module"
-
 liftError :: ExceptT String IO a -> IO a
 liftError = runExceptT >=> either fail return
 
-codegenLLVM :: AST.Module -> S.Program -> IO AST.Module
-codegenLLVM givenModule program = withContext $ \context ->
-    liftError $ withModuleFromAST context llvmAST $ \m -> do
-        llstr <- moduleLLVMAssembly m
-        putStrLn llstr
-        return llvmAST
+codegenLLVM :: Identifier -> S.Program -> AST.Module
+codegenLLVM moduleName program = llvmAST
   where
-    generatedLLVM = codegenProgram program
-    llvmAST       = runLLVM givenModule generatedLLVM
+    generatedLLVM  = codegenProgram program
+    providedModule = emptyModule moduleName
+    llvmAST        = runLLVM providedModule generatedLLVM

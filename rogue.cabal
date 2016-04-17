@@ -1,14 +1,14 @@
 name:                rogue
-version:             0.1.0.0
+version:             0.2
 synopsis:            Initial project template from stack
 description:         Please see README.md
 homepage:            https://github.com/ChShersh/rogue-lang
-license:             BSD3
-license-file:        LICENSE
+-- license:             BSD3
+-- license-file:        LICENSE
 author:              Dmitry Kovanikov
-maintainer:          example@example.com
-copyright:           2016 Author Here
-category:            Web
+-- maintainer:          example@example.com
+-- copyright:           2016 Author Here
+category:            Compiler
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
@@ -25,11 +25,14 @@ library
                      , RogueCompiler
                      , RogueCodegen
                      , RogueEmitter
+                     , RogueJit
+                     , RogueRunner
   build-depends:       base >= 4.7 && < 5
                      , array
                      , mtl
                      , containers
                      , bifunctors
+                     , filepath
                      , llvm-general
                      , llvm-general-pure
   default-language:    Haskell2010
@@ -54,6 +57,9 @@ test-suite rogue-test
   main-is:             Spec.hs
   build-depends:       base
                      , rogue
+                     , test-framework
+                     , test-framework-hunit
+                     , HUnit
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
   default-language:    Haskell2010
 
