@@ -18,10 +18,10 @@ import           LLVM.General.Analysis
 
 import qualified LLVM.General.ExecutionEngine as EE
 
-foreign import ccall "dynamic" haskFun :: FunPtr (IO Double) -> (IO Double)
+foreign import ccall "dynamic" haskFun :: FunPtr (IO ()) -> (IO ())
 
-run :: FunPtr a -> IO Double
-run fn = haskFun (castFunPtr fn :: FunPtr (IO Double))
+run :: FunPtr a -> IO ()
+run fn = haskFun (castFunPtr fn :: FunPtr (IO ()))
 
 jit :: Context -> (EE.MCJIT -> IO a) -> IO a
 jit c = EE.withMCJIT c optlevel model ptrelim fastins
@@ -49,9 +49,7 @@ runJIT mod = do
                   EE.withModuleInEngine executionEngine m $ \ee -> do
                       mainfn <- EE.getFunction ee (AST.Name "main")
                       case mainfn of
-                          Just fn -> do
-                              res <- run fn
-                              putStrLn $ "Evaluated to: " ++ show res
+                          Just fn -> run fn
                           Nothing -> return ()
 
                   -- Return the optimized module

@@ -1,0 +1,35 @@
+language: haskell
+
+sudo: true
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.5
+    packages:
+      - llvm-3.5
+      - llvm-3.5-dev
+      - libedit-dev
+      - g++-4.8
+
+before_install:
+  # Download and unpack the stack executable
+  - sudo rm /usr/bin/cpp /usr/bin/gcc /usr/bin/g++
+  - sudo ln -s /usr/bin/cpp-4.8 /usr/bin/cpp
+  - sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
+  - sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - export PATH=/usr/lib/llvm-3.5/bin:$PATH
+  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+install:
+  - stack --no-terminal --install-ghc  test --only-dependencies
+
+script:
+  - stack --no-terminal --skip-ghc-check test
+
+cache:
+  directories:
+    - $HOME/.stack

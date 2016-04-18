@@ -1,9 +1,18 @@
 flags: {}
+
 extra-package-dbs: []
+
 packages:
-- '.'
+  - '.'
+
 extra-deps:
-- llvm-general-3.5.1.2
-- llvm-general-pure-3.5.1.0
-- text-1.2.2.0
-resolver: lts-5.5
+  - llvm-general-3.5.1.2
+  - llvm-general-pure-3.5.1.0
+
+resolver: lts-5.12
+
+flags:
+  llvm-general:
+    shared-llvm: true
+
+system-ghc: false

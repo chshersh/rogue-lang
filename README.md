@@ -1,4 +1,4 @@
-# rogue-lang
+# rogue-lang [![Build Status](https://travis-ci.org/ChShersh/rogue-lang.svg?branch=master)](https://travis-ci.org/ChShersh/rogue-lang)
 Compiler of my programming language: Rogue
 
 ## Implementation details:
@@ -11,10 +11,8 @@ Use [stack](http://docs.haskellstack.org/en/stable/README/) build tool in this d
 
 ```
 stack build
-stack exec roguec
+stack exec roguec -- <file name>
 ```
-
-Produces LLVM-generated code written in test/testProgram.rg
 
 ### Supported features:
 > Not yet implemented
@@ -23,7 +21,6 @@ Produces LLVM-generated code written in test/testProgram.rg
 
 #### Building
 + tests
-+ [travis](https://travis-ci.org/) building
 
 #### Features
 + errors handling
@@ -43,6 +40,7 @@ Produces LLVM-generated code written in test/testProgram.rg
 #### Known bugs:
 + not allowed function call assignment to variables
 + make `printf` and `scanf` work for booleans
++ not allowed linebreaks in expressions
 
 ### Compiler package structure
 > TODO: describe sources
