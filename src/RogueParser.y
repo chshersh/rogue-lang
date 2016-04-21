@@ -1,6 +1,8 @@
 {
 module RogueParser (parseRogue) where
 
+import Control.Error
+
 import RogueTokens
 import RogueLexer
 import RogueAST
@@ -8,6 +10,9 @@ import RogueAST
 
 %name parseRogue
 %tokentype { Token }
+
+%monad { P } { thenP } { returnP }
+%lexer { lexer } { Sep TokenEOF }
 %error { parseError }
 
 %token 
@@ -167,7 +172,8 @@ RetExpr : {- empty -}    { Nothing }
         | Expr           { Just $1 }
 
 {
-parseError :: [Token] -> a
-parseError (t:ts) = error $ "Parse error on token: " ++ show t ++ ", rem tokens: " ++ show ts
-parseError _      = error "Parse error on end of input"
+
+parseError :: Token -> P a
+parseError token = getLineNo `thenP` \line -> failP (show line ++ ": parse error")
+
 }

@@ -4,72 +4,77 @@ import Data.Char (isAlpha, isSpace, isDigit, isAlphaNum)
 
 import RogueTokens
 
--- | Lexer for Rogue PL.
-lexer :: String -> [Token]
-
-{- End of input -}
--- lexer [] = [TokenEOF]
-lexer [] = []
-
-{- Different separators -}
-lexer ('\n':cs)        = Sep TokenEOL       : lexer cs
-lexer (',':cs)         = Sep TokenComma     : lexer cs
-lexer (':':cs)         = Sep TokenColon     : lexer cs
-lexer (';':cs)         = Sep TokenSemicolon : lexer cs
-lexer ('-':'>':cs)     = Sep TokenTypeArrow : lexer cs
-lexer ('.':'.':'.':cs) = Sep TokenDots      : lexer cs
+-- | Threaded Lexer for Rogue PL.
+lexer :: (Token -> P a) -> P a
+lexer continuation ('\n':cs) lineNumber = continuation (Sep TokenEOL) cs (lineNumber + 1)
 
 {- Skip spaces and parse number or Identifier-}
-lexer s@(c:cs) 
-    | isSpace c = lexer cs
-    | isDigit c || isAlpha c = lexWord s
+lexer continuation s@(c:cs) lineNumber 
+    | isSpace c              = lexer continuation cs lineNumber
+    | isDigit c || isAlpha c = lexWord continuation s lineNumber
 
-{- Comparator signs -}
-lexer ('=':'=':cs) = Cmp TokenEQ  : lexer cs
-lexer ('!':'=':cs) = Cmp TokenNEQ : lexer cs
-lexer ('<':'=':cs) = Cmp TokenLEQ : lexer cs
-lexer ('>':'=':cs) = Cmp TokenGEQ : lexer cs
-lexer ('<':cs)     = Cmp TokenLT  : lexer cs
-lexer ('>':cs)     = Cmp TokenGT  : lexer cs
+lexer continuation s lineNumber = 
+    case s of
+        {- End of input -}
+        [] -> continuation (Sep TokenEOF) "" lineNumber
 
-{- Assignment token, should be after `==` for not overlapping -}
-lexer ('=':cs) = Stmt TokenAssignment : lexer cs
+        {- Different separators -}
+        ',':cs         -> continuation (Sep TokenComma    ) cs lineNumber
+        ':':cs         -> continuation (Sep TokenColon    ) cs lineNumber
+        ';':cs         -> continuation (Sep TokenSemicolon) cs lineNumber
+        '-':'>':cs     -> continuation (Sep TokenTypeArrow) cs lineNumber
+        '.':'.':'.':cs -> continuation (Sep TokenDots     ) cs lineNumber
+    
+        {- Comparator signs -}
+        '=':'=':cs -> continuation (Cmp TokenEQ ) cs lineNumber
+        '!':'=':cs -> continuation (Cmp TokenNEQ) cs lineNumber
+        '<':'=':cs -> continuation (Cmp TokenLEQ) cs lineNumber
+        '>':'=':cs -> continuation (Cmp TokenGEQ) cs lineNumber
+        '<':cs     -> continuation (Cmp TokenLT ) cs lineNumber
+        '>':cs     -> continuation (Cmp TokenGT ) cs lineNumber
 
-{- Skip code comments -}
-lexer ('/':'/':commentText) = lexer $ dropWhile (/= '\n') commentText
-lexer ('/':'*':commentText) = lexer $ dropBlockComment commentText
+        {- Assignment token, should be after `==` for not overlapping -}
+        '=':cs -> continuation (Stmt TokenAssignment) cs lineNumber
+
+        {- Skip code comments -}
+        '/':'/':commentText -> lexer continuation (dropWhile (/= '\n') commentText) lineNumber
+        '/':'*':commentText -> lexer continuation (dropBlockComment commentText) lineNumber
+
+        {- Math signs -}
+        '+':cs     -> continuation (Math TokenPlus ) cs lineNumber
+        '*':'*':cs -> continuation (Math TokenPow  ) cs lineNumber
+        '*':cs     -> continuation (Math TokenTimes) cs lineNumber
+        '/':cs     -> continuation (Math TokenDiv  ) cs lineNumber
+        '%':cs     -> continuation (Math TokenMod  ) cs lineNumber
+        '-':cs     -> continuation (Math TokenMinus) cs lineNumber
+
+        {- Logical operations -}
+        '&':'&':cs -> continuation (Logic TokenAnd) cs lineNumber
+        '|':'|':cs -> continuation (Logic TokenOr ) cs lineNumber
+        '|':cs     -> continuation (Sep TokenGuard) cs lineNumber  -- this is here for not overlapping
+        '!':cs     -> continuation (Logic TokenNot) cs lineNumber  -- should be after !=
+
+        {- Math Braces -}
+        '(':cs -> continuation (Braces TokenRoundOP) cs lineNumber
+        ')':cs -> continuation (Braces TokenRoundCL) cs lineNumber
+        '{':cs -> continuation (Braces TokenCurlyOP) cs lineNumber
+        '}':cs -> continuation (Braces TokenCurlyCL) cs lineNumber
+
+        {- Unknown symbol -}
+        _ -> Failed $ "Unknown symbol: " ++ [head s]
   where
     dropBlockComment ('*':'/':cs)    = cs
     dropBlockComment (_:commentText) = dropBlockComment commentText
     dropBlockComment []              = error "Not closed block comment"  -- TODO: more correct handling (monadic exception)
 
-{- Math signs -}
-lexer ('+':cs)     = Math TokenPlus  : lexer cs
-lexer ('*':'*':cs) = Math TokenPow   : lexer cs
-lexer ('*':cs)     = Math TokenTimes : lexer cs
-lexer ('/':cs)     = Math TokenDiv   : lexer cs
-lexer ('%':cs)     = Math TokenMod   : lexer cs
-lexer ('-':cs)     = Math TokenMinus : lexer cs  -- TODO: handle case with negative numbers
-
-{- Logical operations -}
-lexer ('&':'&':cs) = Logic TokenAnd : lexer cs
-lexer ('|':'|':cs) = Logic TokenOr  : lexer cs
-lexer ('|':cs)     = Sep TokenGuard : lexer cs  -- this is here for not overlapping
-lexer ('!':cs)     = Logic TokenNot : lexer cs  -- should be after !=
-
-{- Math Braces -}
-lexer ('(':cs) = Braces TokenRoundOP : lexer cs
-lexer (')':cs) = Braces TokenRoundCL : lexer cs
-lexer ('{':cs) = Braces TokenCurlyOP : lexer cs
-lexer ('}':cs) = Braces TokenCurlyCL : lexer cs
-
 -- | Function to parse keyword, number or Identifier.
-lexWord :: String -> [Token]
-lexWord s = let (word, rest) = span isAlphaNum s
-            in tokenize word : lexer rest
+lexWord :: (Token -> P a) -> P a
+lexWord continuation s lineNumber = 
+    let (word, rest) = span isAlphaNum s
+    in continuation (tokenize word) rest lineNumber
 
 -- | Convert word to token.
-tokenize :: String -> Token
+tokenize :: Identifier -> Token
 
 {- VarToken -}
 tokenize "let" = Mut TokenLet
@@ -99,4 +104,4 @@ tokenize s@(c:_)
     | isAlpha c     = Var s
 
 {- Unknown case, leads to error -}
-tokenize s = UnknownToken s
+tokenize s = error "This should never happen"

@@ -33,6 +33,7 @@ library
                      , containers
                      , bifunctors
                      , filepath
+                     , errors
                      , llvm-general
                      , llvm-general-pure
   default-language:    Haskell2010

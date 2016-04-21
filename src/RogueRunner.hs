@@ -2,7 +2,7 @@ module RogueRunner where
 
 import System.FilePath (takeBaseName)
 
-import RogueLexer      (lexer)
+import RogueTokens
 import RogueParser     (parseRogue)
 import RogueEmitter    (codegenLLVM)
 import RogueJit        (runJIT)
@@ -11,11 +11,16 @@ compileAndRun :: FilePath -> IO ()
 compileAndRun fileName = do
     fileContent <- readFile fileName
 
-    let tokens          = lexer fileContent
-    let ast             = parseRogue tokens
-    let moduleName      = takeBaseName fileName
-    let codegenedModule = codegenLLVM moduleName ast
+    let parseResult = parseRogue fileContent 1
 
-    runJIT codegenedModule
+    case parseResult of
+         Ok ast -> do
+            let moduleName      = takeBaseName fileName
+            let codegenedModule = codegenLLVM moduleName ast
+
+            runJIT codegenedModule
+            return ()
+            
+         Failed errMsg -> putStrLn errMsg      
     
-    return ()
+    
