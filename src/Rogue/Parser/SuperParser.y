@@ -1,17 +1,16 @@
 {
-module Rogue.Parser (parseRogue) where
+module Rogue.Parser.SuperParser (parseRogue) where
 
-import Control.Error
-
-import Rogue.Tokens
-import Rogue.Lexer
-import Rogue.AST
+import Rogue.Parser.ParserMonad
+import Rogue.Parser.Tokens
+import Rogue.Parser.Lexer
+import Rogue.AST.Untyped
 }
 
 %name parseRogue
 %tokentype { Token }
 
-%monad { P } { thenP } { returnP }
+%monad { ParserM }
 %lexer { lexer } { Sep TokenEOF }
 %error { parseError }
 
@@ -172,8 +171,6 @@ RetExpr : {- empty -}    { Nothing }
         | Expr           { Just $1 }
 
 {
-
-parseError :: Token -> P a
-parseError token = getLineNo `thenP` \line -> failP (show line ++ ": parse error")
-
+parseError :: Token -> ParserM a
+parseError token = reportError $ "Error on token: " ++ show token
 }

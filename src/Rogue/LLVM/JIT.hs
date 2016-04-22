@@ -1,4 +1,4 @@
-module Rogue.JIT where
+module Rogue.LLVM.JIT where
 
 import           Data.Int
 import           Data.Word

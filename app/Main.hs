@@ -2,7 +2,7 @@ module Main where
 
 import System.Environment (getArgs)
 
-import Rogue.Runner       (compileAndRun)
+import Rogue.Compiler     (compileAndRun)
 
 main :: IO ()
 main = do

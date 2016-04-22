@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Rogue.Codegen where
+module Rogue.LLVM.Codegen where
 
 -- import           Debug.Trace
 
@@ -24,7 +24,7 @@ import qualified LLVM.General.AST.Attribute              as A
 import qualified LLVM.General.AST.CallingConvention      as CC
 import qualified LLVM.General.AST.IntegerPredicate       as IP
 
-import           Rogue.Tokens (Identifier, TypeToken(..))
+import           Rogue.Parser.Tokens (Identifier, TypeToken(..))
 
 -------------------------------------------------------------------------------
 -- Module Level

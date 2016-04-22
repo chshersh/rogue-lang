@@ -1,6 +1,6 @@
-module Rogue.AST where
+module Rogue.AST.Untyped where
 
-import Rogue.Tokens
+import Rogue.Parser.Tokens
 
 type Program      = [Declaration]
 type FunctionType = [(Identifier, TypeToken)]

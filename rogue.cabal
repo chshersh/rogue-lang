@@ -18,24 +18,31 @@ library
   ghc-options:         -Wall 
                        -fno-warn-unused-do-bind
                        -fwarn-incomplete-patterns
-  exposed-modules:     Rogue.Tokens
-                     , Rogue.Lexer
-                     , Rogue.AST
-                     , Rogue.Parser
+
+  exposed-modules:     Rogue.Parser.ParserMonad
+                     , Rogue.Parser.Tokens
+                     , Rogue.Parser.Lexer
+                     , Rogue.Parser.SuperParser
+
+                     , Rogue.AST.Untyped
+                     
+                     , Rogue.LLVM.Codegen
+                     , Rogue.LLVM.Emitter
+                     , Rogue.LLVM.JIT
+
+                     , Rogue.Validate.Validator
+
                      , Rogue.Compiler
-                     , Rogue.Codegen
-                     , Rogue.Emitter
-                     , Rogue.JIT
-                     , Rogue.Runner
+
   build-depends:       base >= 4.7 && < 5
                      , array
-                     , mtl
                      , containers
-                     , bifunctors
-                     , filepath
                      , errors
+                     , filepath
+                     , lens
                      , llvm-general
                      , llvm-general-pure
+                     , mtl
   default-language:    Haskell2010
 
 executable roguec
