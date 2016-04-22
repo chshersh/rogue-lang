@@ -1,8 +1,8 @@
-module RogueLexer (lexer) where
+module Rogue.Lexer (lexer) where
 
 import Data.Char (isAlpha, isSpace, isDigit, isAlphaNum)
 
-import RogueTokens
+import Rogue.Tokens
 
 -- | Threaded Lexer for Rogue PL.
 lexer :: (Token -> P a) -> P a

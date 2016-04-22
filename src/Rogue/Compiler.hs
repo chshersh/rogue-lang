@@ -1,9 +1,6 @@
-module RogueCompiler where
+module Rogue.Compiler where
 
-import RogueLexer 
-import RogueAST
-import RogueParser
-import RogueCodegen
+import Rogue.AST
 
 -- | Check next kinds of semantic correctness:
 -- * variables are used after their definition  (maybe not on global level),

@@ -1,4 +1,4 @@
-module RogueJit where
+module Rogue.JIT where
 
 import           Data.Int
 import           Data.Word

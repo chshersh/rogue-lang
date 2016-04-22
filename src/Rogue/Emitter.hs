@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module RogueEmitter where
+module Rogue.Emitter where
 
 import           Control.Monad.State
 
@@ -19,9 +19,9 @@ import qualified LLVM.General.AST          as AST
 import qualified LLVM.General.AST.Constant as C
 import qualified LLVM.General.AST.Type     as T
 
-import           RogueTokens
-import qualified RogueAST                  as S
-import           RogueCodegen
+import           Rogue.Tokens
+import qualified Rogue.AST                 as S
+import           Rogue.Codegen
 
 toLLVMTypeSignature :: S.FunctionType -> [(AST.Name, AST.Type)]
 toLLVMTypeSignature = map (bimap AST.Name typeFromToken)

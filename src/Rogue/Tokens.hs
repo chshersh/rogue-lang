@@ -1,4 +1,4 @@
-module RogueTokens where
+module Rogue.Tokens where
 
 data ParseResult a = Ok a | Failed String
 

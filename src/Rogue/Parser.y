@@ -1,11 +1,11 @@
 {
-module RogueParser (parseRogue) where
+module Rogue.Parser (parseRogue) where
 
 import Control.Error
 
-import RogueTokens
-import RogueLexer
-import RogueAST
+import Rogue.Tokens
+import Rogue.Lexer
+import Rogue.AST
 }
 
 %name parseRogue

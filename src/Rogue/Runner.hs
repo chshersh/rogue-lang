@@ -1,11 +1,11 @@
-module RogueRunner where
+module Rogue.Runner where
 
 import System.FilePath (takeBaseName)
 
-import RogueTokens
-import RogueParser     (parseRogue)
-import RogueEmitter    (codegenLLVM)
-import RogueJit        (runJIT)
+import Rogue.Tokens
+import Rogue.Parser    (parseRogue)
+import Rogue.Emitter   (codegenLLVM)
+import Rogue.JIT       (runJIT)
 
 compileAndRun :: FilePath -> IO ()
 compileAndRun fileName = do

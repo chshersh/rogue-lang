@@ -1,5 +1,5 @@
 name:                rogue
-version:             0.2
+version:             0.3.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
 homepage:            https://github.com/ChShersh/rogue-lang
@@ -18,15 +18,15 @@ library
   ghc-options:         -Wall 
                        -fno-warn-unused-do-bind
                        -fwarn-incomplete-patterns
-  exposed-modules:     RogueTokens
-                     , RogueLexer
-                     , RogueAST
-                     , RogueParser
-                     , RogueCompiler
-                     , RogueCodegen
-                     , RogueEmitter
-                     , RogueJit
-                     , RogueRunner
+  exposed-modules:     Rogue.Tokens
+                     , Rogue.Lexer
+                     , Rogue.AST
+                     , Rogue.Parser
+                     , Rogue.Compiler
+                     , Rogue.Codegen
+                     , Rogue.Emitter
+                     , Rogue.JIT
+                     , Rogue.Runner
   build-depends:       base >= 4.7 && < 5
                      , array
                      , mtl
@@ -41,10 +41,7 @@ library
 executable roguec
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded 
-                       -rtsopts 
-                       -with-rtsopts=-N 
-                       -Wall 
+  ghc-options:         -Wall 
                        -fno-warn-unused-do-bind
                        -fwarn-incomplete-patterns
   build-depends:       base
