@@ -1,6 +1,6 @@
 name:                rogue
-version:             0.3.0
-synopsis:            Initial project template from stack
+version:             0.3.1
+synopsis:            Compiler of Rogue programming language
 description:         Please see README.md
 homepage:            https://github.com/ChShersh/rogue-lang
 -- license:             BSD3
@@ -30,7 +30,7 @@ library
                      , Rogue.LLVM.Emitter
                      , Rogue.LLVM.JIT
 
-                     , Rogue.Validate.Validator
+                     , Rogue.Verify.Verifier
 
                      , Rogue.Compiler
 
@@ -43,6 +43,7 @@ library
                      , llvm-general
                      , llvm-general-pure
                      , mtl
+                     , unordered-containers
   default-language:    Haskell2010
 
 executable roguec

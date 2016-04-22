@@ -123,17 +123,21 @@ Expr : Expr '&&' Expr           { And $1 $3 }
      | Expr '**' Expr           { Power    $1 $3 }
      | '-' Expr %prec UMINUS    { Negate   $2    }
 
-     | int                      { IntConst  $1 }
-     | bool                     { BoolConst $1 }
-     | var                      { VarExpr   $1 }
-     | '(' Expr ')'             {           $2 }
+     | FunCall                  { $1 }
+     | ExprAtom                 { $1 }
+     
+ExprAtom :: { Expr }
+ExprAtom : int             { IntConst  $1 }
+         | bool            { BoolConst $1 }
+         | '(' Expr ')'    {           $2 }
 
 FunCall :: { Expr }
 FunCall : var FunArgsList    { VarOrCall $1 (reverse $2) }
 
 FunArgsList :: { [Expr] }
-FunArgsList : {- empty -}         {      [] }
-            | FunArgsList Expr    { $2 : $1 }  -- TODO: shouldn't allow binary operations out of brackets
+FunArgsList : {- empty -}             {                   [] }
+            | FunArgsList ExprAtom    {              $2 : $1 }
+            | FunArgsList var         { VarOrCall $2 [] : $1 }
 
 {- Type section -}
 OptionalType :: { Maybe TypeToken }

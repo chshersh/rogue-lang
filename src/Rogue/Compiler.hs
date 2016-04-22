@@ -7,6 +7,7 @@ import Control.Monad.State
 
 import Rogue.Parser.ParserMonad
 import Rogue.Parser.SuperParser (parseRogue)
+import Rogue.Verify.Verifier    (verify)
 import Rogue.LLVM.Emitter       (codegenLLVM)
 import Rogue.LLVM.JIT           (runJIT)
 
@@ -20,6 +21,7 @@ compileAndRun inputFileName = do
     case runExcept parseResult of
          Left errMsg -> putStrLn errMsg
          Right ast   -> do
-            let codegenedModule = codegenLLVM moduleName ast
+            let verifiedAst     = verify ast
+            let codegenedModule = codegenLLVM moduleName verifiedAst
             runJIT codegenedModule
             return ()

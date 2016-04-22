@@ -14,33 +14,30 @@ stack build
 stack exec roguec -- <file name>
 ```
 
-### Supported features:
-> Not yet implemented
-
 ### WIP:
 
 #### Building
 + tests
 
 #### Features
-+ errors handling
-  - monadic parser and lexer support for errors reporting
-  - typechecker
-  - semantic rules
-+ global variables
-+ power operator
-+ make `scanf` to return value, not write in variable (stdlib)
-+ type inference
-+ lazy logical operations
-+ immutable variables support
-+ syntax sugar
-+ HOF
-+ custom start function
++ [ ] errors handling
+  - [x] monadic parser and lexer support for errors reporting
+  - [ ] typechecker
+  - [ ] semantic rules
++ [ ] global variables
++ [ ] power operator
++ [ ] make `scanf` return value, not write in variable (stdlib)
++ [ ] type inference
++ [ ] lazy logical operations
++ [ ] immutable variables (and passing to function by reference) support
++ [ ] HOF
++ [ ] pattern matching syntax sugar
++ [ ] default arguments
++ [ ] custom start function
 
 #### Known bugs:
-+ not allowed function call assignment to variables
-+ make `printf` and `scanf` work for booleans
-+ not allowed linebreaks in expressions
++ [ ] make `printf` and `scanf` work for booleans
++ [ ] not allowed linebreaks in expressions
 
 ### Compiler package structure
 > TODO: describe sources
