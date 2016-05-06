@@ -219,9 +219,6 @@ unaryOpMap = Map.fromList [
 -- Compilation
 -------------------------------------------------------------------------------
 
-liftError :: ExceptT String IO a -> IO a
-liftError = runExceptT >=> either fail return
-
 codegenLLVM :: Identifier -> S.Program -> AST.Module
 codegenLLVM moduleName program = llvmAST
   where

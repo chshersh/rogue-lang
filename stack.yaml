@@ -9,10 +9,8 @@ extra-deps:
   - llvm-general-3.5.1.2
   - llvm-general-pure-3.5.1.0
 
-resolver: lts-5.12
+resolver: lts-6.1
 
 flags:
   llvm-general:
     shared-llvm: true
-
-system-ghc: false

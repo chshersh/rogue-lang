@@ -18,10 +18,11 @@ import           LLVM.General.Analysis
 
 import qualified LLVM.General.ExecutionEngine as EE
 
-foreign import ccall "dynamic" haskFun :: FunPtr (IO ()) -> (IO ())
+foreign import ccall "dynamic"
+    llvmToHaskellFunction :: FunPtr (IO ()) -> (IO ())
 
-run :: FunPtr a -> IO ()
-run fn = haskFun (castFunPtr fn :: FunPtr (IO ()))
+runForeign :: FunPtr a -> IO ()
+runForeign fun = llvmToHaskellFunction $ castFunPtr fun
 
 jit :: Context -> (EE.MCJIT -> IO a) -> IO a
 jit c = EE.withMCJIT c optlevel model ptrelim fastins
@@ -38,19 +39,24 @@ runJIT :: AST.Module -> IO (Either String AST.Module)
 runJIT mod = do
   withContext $ \context ->
       jit context $ \executionEngine ->
-          runExceptT $ withModuleFromAST context mod $ \m ->
+          runExceptT $ withModuleFromAST context mod $ \m ->  -- TODO: handle errors properly
               withPassManager passes $ \pm -> do
                   -- Optimization Pass
                   {-runPassManager pm m-}
-                  optmod <- moduleAST m
-                  s      <- moduleLLVMAssembly m
-                  putStrLn s
+                  optimizedModule <- moduleAST m
 
                   EE.withModuleInEngine executionEngine m $ \ee -> do
                       mainfn <- EE.getFunction ee (AST.Name "main")
                       case mainfn of
-                          Just fn -> run fn
+                          Just fn -> runForeign fn
                           Nothing -> return ()
 
                   -- Return the optimized module
-                  return optmod
+                  return optimizedModule
+
+liftError :: ExceptT String IO a -> IO a
+liftError = runExceptT >=> either fail return
+
+stringLLVMRepresentation :: AST.Module -> IO String
+stringLLVMRepresentation m = withContext $ \context ->
+    liftError $ withModuleFromAST context m moduleLLVMAssembly
