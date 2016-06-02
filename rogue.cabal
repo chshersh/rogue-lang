@@ -51,7 +51,7 @@ executable roguec
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
                        -Wall
   build-depends:       base >= 4.7 && < 5
-                     , pipes
+                     , optparse-generic
                      , rogue
   build-tools:         happy
   default-language:    Haskell2010
@@ -61,17 +61,24 @@ test-suite rogue-test
   hs-source-dirs:      test
   main-is:             Test.hs
   other-modules:       Spec
-                     , Test.Rogue.DummySpec
+                     , Test.Rogue.Runner.ProcessLLVM
+
+                     , Test.Rogue.Suite.DummySpec
+                     , Test.Rogue.Suite.UnpureLLVMSpec
+
   build-depends:       base >= 4.7 && < 5
                      , hspec
                      , pipes
+                     , process
                      , QuickCheck
                      , rogue
                      , tasty
                      , tasty-hunit
+                     , text
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
                        -Wall
   default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
 
 source-repository head
   type:     git

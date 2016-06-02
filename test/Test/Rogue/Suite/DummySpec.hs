@@ -1,4 +1,4 @@
-module Test.Rogue.DummySpec
+module Test.Rogue.Suite.DummySpec
     ( spec
     ) where
 

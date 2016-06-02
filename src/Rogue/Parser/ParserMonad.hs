@@ -2,7 +2,15 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
-module Rogue.Parser.ParserMonad where
+module Rogue.Parser.ParserMonad
+    ( ParserM (..)
+    , ParserState (..)
+    , column
+    , fileName
+    , inputStream
+    , lineNumber
+    , reportError
+    ) where
 
 import Control.Lens
 import Control.Monad.Except
@@ -10,12 +18,12 @@ import Control.Monad.State
 
 import Rogue.Parser.Tokens (Identifier)
 
-data ParserState 
-    = ParserState { _fileName    :: Identifier
-                  , _inputStream :: String
-                  , _lineNumber  :: Int
-                  , _column      :: Int
-                  } deriving Show
+data ParserState = ParserState
+    { _fileName    :: Identifier
+    , _inputStream :: String
+    , _lineNumber  :: Int
+    , _column      :: Int
+    } deriving Show
 
 makeLenses ''ParserState
 

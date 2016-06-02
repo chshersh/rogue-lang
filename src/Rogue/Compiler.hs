@@ -1,28 +1,23 @@
-module Rogue.Compiler where
+module Rogue.Compiler
+    ( compileFile
+    , moduleToString
+    , runModule
+    ) where
 
 import System.FilePath          (takeBaseName)
 
-import Control.Monad.Except
-import Control.Monad.State
+import Data.Functor             (void)
+import Control.Monad.Except     (runExcept)
+import Control.Monad.State      (evalStateT)
 
 import LLVM.General.AST         (Module)
 
-import Rogue.Parser.ParserMonad
+import Rogue.Parser.ParserMonad (ParserM (unParserM), ParserState (..))
 import Rogue.Parser.Tokens      (Identifier)
 import Rogue.Parser.SuperParser (parseRogue)
 import Rogue.Verify.Verifier    (verify)
 import Rogue.LLVM.Emitter       (codegenLLVM)
-import Rogue.LLVM.JIT           (runJIT, stringLLVMRepresentation)
-
-compileAndRun :: FilePath -> IO ()
-compileAndRun inputFileName = do
-    compiledModule <- compileFile inputFileName
-    moduleString   <- stringLLVMRepresentation compiledModule
-
-    putStrLn "Generated module: "
-    putStrLn moduleString
-
-    runModule compiledModule
+import Rogue.LLVM.JIT           (runJIT, moduleToString)
 
 compileFile :: FilePath -> IO Module
 compileFile inputFileName = do
@@ -43,8 +38,8 @@ compileModule moduleName moduleContent = do
     case runExcept parseResult of
          Left errMsg -> error errMsg  -- TODO: handle errors properly
          Right ast   -> do
-            let verifiedAst     = verify ast
+            let verifiedAst = verify ast
             return $ codegenLLVM moduleName verifiedAst
 
 runModule :: Module -> IO ()
-runModule compiledModule = runJIT compiledModule >> return ()
+runModule compiledModule = void $ runJIT compiledModule

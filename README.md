@@ -11,13 +11,8 @@ Use [stack](http://docs.haskellstack.org/en/stable/README/) build tool in this d
 
 ```
 stack build
-stack exec roguec -- <file name>
+stack exec roguec -- --file <file name> [--verbose]
 ```
-
-### WIP:
-
-#### Building
-+ tests
 
 #### Features
 + [ ] errors handling

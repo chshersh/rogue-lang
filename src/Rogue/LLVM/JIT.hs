@@ -57,6 +57,6 @@ runJIT mod = do
 liftError :: ExceptT String IO a -> IO a
 liftError = runExceptT >=> either fail return
 
-stringLLVMRepresentation :: AST.Module -> IO String
-stringLLVMRepresentation m = withContext $ \context ->
+moduleToString :: AST.Module -> IO String
+moduleToString m = withContext $ \context ->
     liftError $ withModuleFromAST context m moduleLLVMAssembly
