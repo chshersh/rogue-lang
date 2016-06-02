@@ -2,6 +2,9 @@ language: haskell
 
 sudo: true
 
+# Choose a lightweight base image; we provide our own build tools.
+language: c
+
 addons:
   apt:
     sources:
@@ -14,15 +17,20 @@ addons:
       - g++-4.8
 
 before_install:
+  # Using compiler above sets CC to an invalid value, so unset it
+  - unset CC
+
   # Download and unpack the stack executable
   - sudo rm /usr/bin/cpp /usr/bin/gcc /usr/bin/g++
   - sudo ln -s /usr/bin/cpp-4.8 /usr/bin/cpp
   - sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
   - sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - export PATH=/usr/lib/llvm-3.5/bin:$PATH
-  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+  - curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
   - stack --no-terminal --install-ghc test --only-dependencies
