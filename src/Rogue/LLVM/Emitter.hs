@@ -1,27 +1,29 @@
-{-# LANGUAGE OverloadedStrings #-}
+module Rogue.LLVM.Emitter
+    ( codegenLLVM
+    ) where
 
-module Rogue.LLVM.Emitter where
-
-import           Control.Monad.State
-
-import           Data.Bifunctor (bimap)
-import           Data.Word
-import           Data.Int
-import           Control.Monad.Except
-import           Control.Applicative
-import           Data.Map (Map)
+import           Control.Monad             (forM)
+import           Data.Bifunctor            (bimap)
+import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
-
-import           LLVM.General.Module
-import           LLVM.General.Context
 
 import qualified LLVM.General.AST          as AST
 import qualified LLVM.General.AST.Constant as C
 import qualified LLVM.General.AST.Type     as T
 
-import           Rogue.Parser.Tokens
 import qualified Rogue.AST.Untyped         as S
-import           Rogue.LLVM.Codegen
+import           Rogue.LLVM.Codegen        (Codegen (..), LLVM, addBlock,
+                                            alloca, assign, br, call, cbr,
+                                            createBlocks, declareExternal,
+                                            defineFunction, defineIOStrVariable,
+                                            emptyModule, entryBlockName,
+                                            execCodegen, externf, iadd, idiv,
+                                            ieq, igeq, igt, ileq, ilt, imod,
+                                            imul, ineg, ineq, ipow, isub, land,
+                                            lnot, load, lookupSymbolTable, lor,
+                                            ret, runLLVM, setBlock, store,
+                                            typeFromToken, updateNameMap)
+import           Rogue.Parser.Tokens       (Identifier)
 
 toLLVMTypeSignature :: S.FunctionType -> [(AST.Name, AST.Type)]
 toLLVMTypeSignature = map (bimap AST.Name typeFromToken)

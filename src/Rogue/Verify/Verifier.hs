@@ -1,15 +1,18 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Rogue.Verify.Verifier (verify) where
+module Rogue.Verify.Verifier
+    ( verify
+    ) where
 
-import           Data.HashSet (HashSet)
-import qualified Data.HashSet                 as HS
+import           Data.HashSet         (HashSet)
+import qualified Data.HashSet         as HS
 
-import           Control.Applicative (liftA2)
-import           Control.Monad.Reader
+import           Control.Applicative  (liftA2)
+import           Control.Monad.Reader (Reader, ask, runReader)
 
-import           Rogue.AST.Untyped
+import           Rogue.AST.Untyped    (Declaration (..), Expr (..), Program,
+                                       Statement (..), Statements)
 
 -- | Check next kinds of semantic correctness:
 -- * convert possible function calls to variables,
@@ -24,7 +27,7 @@ collectFunNames :: Program -> HashSet String -> HashSet String
 collectFunNames                           []  hashSet = hashSet
 collectFunNames (FunDef { defName, .. } : ps) hashSet = collectFunNames ps $ HS.insert defName hashSet
 collectFunNames (                     _ : ps) hashSet = collectFunNames ps hashSet
-    
+
 -- | Verify top level bindings such as Global variables and Global functions
 verifyTopLevel :: Program -> Reader (HashSet String) Program
 verifyTopLevel                               []  = return []
@@ -32,7 +35,7 @@ verifyTopLevel (   VarDef {          .. }  : ps) = verifyTopLevel ps  -- TODO: h
 verifyTopLevel (f@(FunDef { funBody, .. }) : ps) = do
     validBody <- verifyBody funBody
     validRest <- verifyTopLevel ps
-    return $ f { funBody = validBody } : validRest 
+    return $ f { funBody = validBody } : validRest
 
 verifyBody :: Statements -> Reader (HashSet String) Statements
 verifyBody [] = return []
@@ -50,7 +53,7 @@ verifyBody (If cond ifTrue ifFalse : ss) = do
 
     validRest    <- verifyBody ss
 
-    return $ If validCond validIfTrue validIfFalse : validRest   
+    return $ If validCond validIfTrue validIfFalse : validRest
 
 verifyBody (While cond whileBody : ss) = do
     validCond      <- verifyExpr cond
@@ -100,7 +103,7 @@ verifyExpr   (VarOrCall name args) = do
         return $ VarOrCall name validArgs
     else if not $ null args then
         error $ name ++ " is variable but applied to " ++ show args  -- TODO: monadic exception
-    else 
+    else
         return $ VarExpr name
 
 verifyExpr v@(VarExpr _) = error $ "WTF: " ++ show v

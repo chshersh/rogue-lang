@@ -1,30 +1,95 @@
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Rogue.LLVM.Codegen where
+module Rogue.LLVM.Codegen
+    (
+      -- * The @LLVM@ type and functions for global definitions
+      LLVM
+    , runLLVM
+    , declareExternal
+    , defineFunction
+    , defineIOStrVariable
 
--- import           Debug.Trace
+    -- * Function to convert 'Rogue.Parser.Tokens.TypeToken' to LLVM types
+    , typeFromToken
 
-import           Control.Monad.State
+    -- * The @Codegen@ type for handling blocks and state
+    , Codegen (..)
+    , execCodegen
+    , addBlock
+    , createBlocks
+    , setBlock
+    , entryBlockName
+    , updateNameMap
+    , lookupSymbolTable
+    , externf
+    , emptyModule
+    , assign
 
-import           Data.Function
-import           Data.List
-import           Data.Char (ord)
-import           Data.Map (Map)
-import qualified Data.Map                                as Map
-import           Data.String
+    -- * Binary operations on operands
 
-import           LLVM.General.AST hiding (type')
-import           LLVM.General.AST.Type                   as T
-import           LLVM.General.AST.Global                 
-import qualified LLVM.General.AST                        as AST
+    -- Logic operations
+    , land
+    , lor
+    , lnot
 
-import qualified LLVM.General.AST.Constant               as C
-import qualified LLVM.General.AST.Attribute              as A
-import qualified LLVM.General.AST.CallingConvention      as CC
-import qualified LLVM.General.AST.IntegerPredicate       as IP
+    -- Comparison operations
+    , ieq
+    , ineq
+    , ileq
+    , igeq
+    , ilt
+    , igt
 
-import           Rogue.Parser.Tokens (Identifier, TypeToken(..))
+    -- Math Operations
+    , iadd
+    , isub
+    , ineg
+    , imul
+    , idiv
+    , imod
+    , ipow
+
+    -- * Memory allocation operations
+    , call
+    , alloca
+    , store
+    , load
+
+    -- * Control flow operations
+    , br
+    , cbr
+    , ret
+    ) where
+
+import           Control.Monad.State                (MonadState, State,
+                                                     execState, gets, modify)
+
+import           Data.Char                          (ord)
+import           Data.List                          (sortOn)
+import           Data.Map                           (Map)
+import qualified Data.Map                           as Map
+import           Data.String                        (IsString (..))
+
+import           LLVM.General.AST                   (BasicBlock (..),
+                                                     Definition (..),
+                                                     Instruction (Add, Alloca, And, Call, ICmp, Load, Mul, Or, SDiv, SRem, Store, Sub, Xor),
+                                                     Module (..), Name (..),
+                                                     Named (..), Operand (..),
+                                                     Parameter (Parameter),
+                                                     Terminator (..), Type,
+                                                     defaultModule)
+import qualified LLVM.General.AST                   as AST
+import           LLVM.General.AST.Global            (Global (..),
+                                                     functionDefaults,
+                                                     globalVariableDefaults)
+import qualified LLVM.General.AST.Type              as T
+
+import qualified LLVM.General.AST.Attribute         as A
+import qualified LLVM.General.AST.CallingConvention as CC
+import qualified LLVM.General.AST.Constant          as C
+import qualified LLVM.General.AST.IntegerPredicate  as IP
+
+import           Rogue.Parser.Tokens                (Identifier, TypeToken (..))
 
 -------------------------------------------------------------------------------
 -- Module Level
@@ -68,10 +133,10 @@ defineIOStrVariable varName formatString = addDefinition $
       name        = Name varName
     , type'       = T.ArrayType (fromIntegral $ length formatString) T.i8
     , isConstant  = True
-    , initializer = Just $ C.Array T.i8 $ map (C.Int 8 . fromIntegral . ord) formatString   
+    , initializer = Just $ C.Array T.i8 $ map (C.Int 8 . fromIntegral . ord) formatString
     }
 
----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Types
 -------------------------------------------------------------------------------
 
@@ -130,7 +195,7 @@ instance IsString Name where
 -------------------------------------------------------------------------------
 
 sortBlocks :: [(Name, BlockState)] -> [(Name, BlockState)]
-sortBlocks = sortBy (compare `on` (idx . snd))
+sortBlocks = sortOn (idx . snd)
 
 createBlocks :: CodegenState -> [BasicBlock]
 createBlocks = map makeBlock . sortBlocks . Map.toList . blocks
@@ -165,7 +230,7 @@ addInstruction name instruction = do
     let curStack = stack curBlock
 
     modifyBlock (curBlock { stack = curStack ++ [name := instruction] })
-    return $ LocalReference i32 name  -- TODO: here should be actual type
+    return $ LocalReference T.i32 name  -- TODO: here should be actual type
 
 namedInstruction :: Maybe Identifier -> Instruction -> Codegen Operand
 namedInstruction (Just name) instruction = do
@@ -184,8 +249,8 @@ terminator :: Named Terminator -> Codegen (Named Terminator)
 terminator newTerminator = do
     curBlock <- current
     case term curBlock of
-        t@(Just oldTerminator) -> return oldTerminator
-        Nothing                -> do 
+        Just oldTerminator -> return oldTerminator
+        Nothing            -> do
             modifyBlock (curBlock { term = Just newTerminator })
             return newTerminator
 
@@ -254,10 +319,10 @@ lookupSymbolTable var = do
 -------------------------------------------------------------------------------
 
 global :: Name -> C.Constant
-global = C.GlobalReference i32
+global = C.GlobalReference T.i32
 
 externf :: Name -> Operand
-externf = ConstantOperand . global
+externf = AST.ConstantOperand . global
 
 -------------------------------------------------------------------------------
 -- Arithmetic and Constants
@@ -297,7 +362,7 @@ ilt = icmp IP.SLT
 igt :: Operand -> Operand -> Codegen Operand
 igt = icmp IP.SGT
 
--- Math Operations
+-- Math operations
 -- imath :: Instruction -> Operand -> Operand -> Codegen Operand
 
 iadd :: Operand -> Operand -> Codegen Operand
@@ -332,7 +397,7 @@ toArgs = map (\x -> (x, []))
 call :: Operand -> [Operand] -> Codegen Operand
 call fn args = namedInstruction Nothing $ Call Nothing CC.C [] (Right fn) (toArgs args) [] []
 
-alloca :: Identifier -> Type -> Codegen Operand
+alloca :: Identifier -> AST.Type -> Codegen Operand
 alloca name ty = namedInstruction (Just name) $ Alloca ty Nothing 0 []
 
 store :: Operand -> Operand -> Codegen Operand

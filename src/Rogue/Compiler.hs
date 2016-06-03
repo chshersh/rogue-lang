@@ -4,20 +4,20 @@ module Rogue.Compiler
     , runModule
     ) where
 
-import System.FilePath          (takeBaseName)
+import           System.FilePath          (takeBaseName)
 
-import Data.Functor             (void)
-import Control.Monad.Except     (runExcept)
-import Control.Monad.State      (evalStateT)
+import           Control.Monad.Except     (runExcept)
+import           Control.Monad.State      (evalStateT)
+import           Data.Functor             (void)
 
-import LLVM.General.AST         (Module)
+import           LLVM.General.AST         (Module)
 
-import Rogue.Parser.ParserMonad (ParserM (unParserM), ParserState (..))
-import Rogue.Parser.Tokens      (Identifier)
-import Rogue.Parser.SuperParser (parseRogue)
-import Rogue.Verify.Verifier    (verify)
-import Rogue.LLVM.Emitter       (codegenLLVM)
-import Rogue.LLVM.JIT           (runJIT, moduleToString)
+import           Rogue.LLVM.Emitter       (codegenLLVM)
+import           Rogue.LLVM.JIT           (moduleToString, runJIT)
+import           Rogue.Parser.ParserMonad (ParserM (unParserM), ParserState (..))
+import           Rogue.Parser.SuperParser (parseRogue)
+import           Rogue.Parser.Tokens      (Identifier)
+import           Rogue.Verify.Verifier    (verify)
 
 compileFile :: FilePath -> IO Module
 compileFile inputFileName = do

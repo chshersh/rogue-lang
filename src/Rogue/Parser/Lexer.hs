@@ -1,12 +1,22 @@
-module Rogue.Parser.Lexer (lexer) where
+module Rogue.Parser.Lexer
+    ( lexer
+    ) where
 
-import Data.Char (isAlpha, isSpace, isDigit, isAlphaNum)
+import           Data.Char                (isAlpha, isAlphaNum, isDigit,
+                                           isSpace)
 
-import Control.Lens
-import Control.Monad.State
+import           Control.Lens             ((+=), (.=))
+import           Control.Monad.State      (gets)
 
-import Rogue.Parser.ParserMonad
-import Rogue.Parser.Tokens
+import           Rogue.Parser.ParserMonad (ParserM (..),
+                                           ParserState (_inputStream), column,
+                                           inputStream, lineNumber, reportError)
+import           Rogue.Parser.Tokens      (BracesToken (..), CmpToken (..),
+                                           ControlFlowToken (..), Identifier,
+                                           LogicalToken (..), MathToken (..),
+                                           MutabilityToken (..), SeparateToken (..),
+                                           StatementToken (..), Token (..),
+                                           TypeToken (..), ValueToken (..))
 
 -- | Threaded Lexer for Rogue PL.
 lexer :: (Token -> ParserM a) -> ParserM a
@@ -14,7 +24,7 @@ lexer continuation = do
     input    <- gets _inputStream
     curToken <- runLexer input
     continuation curToken
-  
+
 -- | Helper function to yield tokens.
 runLexer :: String -> ParserM Token
 
@@ -37,7 +47,7 @@ runLexer ('-':'>':cs    ) = moveInputColumnWithToken cs 2 $ Sep TokenTypeArrow
 runLexer ('.':'.':'.':cs) = moveInputColumnWithToken cs 3 $ Sep TokenDots
 
 {- Comparator signs -}
-runLexer ('=':'=':cs) = moveInputColumnWithToken cs 2 $ Cmp TokenEQ 
+runLexer ('=':'=':cs) = moveInputColumnWithToken cs 2 $ Cmp TokenEQ
 runLexer ('!':'=':cs) = moveInputColumnWithToken cs 2 $ Cmp TokenNEQ
 runLexer ('<':'=':cs) = moveInputColumnWithToken cs 2 $ Cmp TokenLEQ
 runLexer ('>':'=':cs) = moveInputColumnWithToken cs 2 $ Cmp TokenGEQ
@@ -102,7 +112,7 @@ moveInputColumnWithToken :: String -> Int -> Token -> ParserM Token
 moveInputColumnWithToken rest tokenLen token = do
     inputStream .= rest
     column      += tokenLen
-    return token        
+    return token
 
 -- | Convert keyword to token.
 tokenize :: Identifier -> Token

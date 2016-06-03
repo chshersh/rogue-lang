@@ -1,22 +1,21 @@
-module Rogue.LLVM.JIT where
+module Rogue.LLVM.JIT
+    ( runJIT
+    , moduleToString
+    ) where
 
-import           Data.Int
-import           Data.Word
-import           Foreign.Ptr ( FunPtr, castFunPtr )
+import           Foreign.Ptr                  (FunPtr, castFunPtr)
 
-import           Control.Monad.Except
+import           Control.Monad                ((>=>))
+import           Control.Monad.Except         (ExceptT, runExceptT)
 
-import           LLVM.General.Target
-import           LLVM.General.Context
-import           LLVM.General.CodeModel
-import           LLVM.General.Module          as Mod
 import qualified LLVM.General.AST             as AST
-
-import           LLVM.General.PassManager
-import           LLVM.General.Transforms
-import           LLVM.General.Analysis
-
+import           LLVM.General.Context         (Context, withContext)
 import qualified LLVM.General.ExecutionEngine as EE
+import           LLVM.General.Module          (moduleAST, moduleLLVMAssembly,
+                                               withModuleFromAST)
+import           LLVM.General.PassManager     (PassSetSpec (..),
+                                               defaultCuratedPassSetSpec,
+                                               withPassManager)
 
 foreign import ccall "dynamic"
     llvmToHaskellFunction :: FunPtr (IO ()) -> (IO ())
@@ -25,21 +24,21 @@ runForeign :: FunPtr a -> IO ()
 runForeign fun = llvmToHaskellFunction $ castFunPtr fun
 
 jit :: Context -> (EE.MCJIT -> IO a) -> IO a
-jit c = EE.withMCJIT c optlevel model ptrelim fastins
+jit context = EE.withMCJIT context optlevel model ptrelim fastins
   where
-    optlevel = Just 0  -- optimization level
-    model    = Nothing -- code model ( Default )
-    ptrelim  = Nothing -- frame pointer elimination
-    fastins  = Nothing -- fast instruction selection
+    optlevel = Just 0   -- optimization level
+    model    = Nothing  -- code model ( Default )
+    ptrelim  = Nothing  -- frame pointer elimination
+    fastins  = Nothing  -- fast instruction selection
 
 passes :: PassSetSpec
 passes = defaultCuratedPassSetSpec { optLevel = Just 3 }
 
 runJIT :: AST.Module -> IO (Either String AST.Module)
-runJIT mod = do
+runJIT compiledModule = do
   withContext $ \context ->
       jit context $ \executionEngine ->
-          runExceptT $ withModuleFromAST context mod $ \m ->  -- TODO: handle errors properly
+          runExceptT $ withModuleFromAST context compiledModule $ \m ->  -- TODO: handle errors properly
               withPassManager passes $ \pm -> do
                   -- Optimization Pass
                   {-runPassManager pm m-}

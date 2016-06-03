@@ -1,4 +1,17 @@
-module Rogue.Parser.Tokens where
+module Rogue.Parser.Tokens
+    ( Identifier
+    , Token            (..)
+    , MutabilityToken  (..)
+    , ValueToken       (..)
+    , TypeToken        (..)
+    , CmpToken         (..)
+    , MathToken        (..)
+    , LogicalToken     (..)
+    , BracesToken      (..)
+    , SeparateToken    (..)
+    , StatementToken   (..)
+    , ControlFlowToken (..)
+    ) where
 
 type Identifier = String
 
@@ -23,8 +36,8 @@ data MutabilityToken
     deriving Show
 
 data ValueToken
-    = TokenInt Int     -- 123
-    | TokenBool Bool   -- `true` or `false` 
+    = TokenInt Int    -- 123
+    | TokenBool Bool  -- `true` or `false`
     deriving Show
 
 data TypeToken

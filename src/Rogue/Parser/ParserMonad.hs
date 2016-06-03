@@ -12,11 +12,11 @@ module Rogue.Parser.ParserMonad
     , reportError
     ) where
 
-import Control.Lens
-import Control.Monad.Except
-import Control.Monad.State
+import           Control.Lens         (makeLenses)
+import           Control.Monad.Except (Except, MonadError, throwError)
+import           Control.Monad.State  (MonadState, StateT, get)
 
-import Rogue.Parser.Tokens (Identifier)
+import           Rogue.Parser.Tokens  (Identifier)
 
 data ParserState = ParserState
     { _fileName    :: Identifier

@@ -4,15 +4,13 @@ module Test.Rogue.Runner.ProcessLLVM
     ( createProcessLLVM
     ) where
 
-import Prelude hiding (putStrLn)
+import           Data.Monoid    ((<>))
 
-import Data.Monoid    ((<>))
+import           Data.Text.IO   (hGetLine, hPutStrLn, putStrLn)
+import           Data.Text.Read (decimal)
 
-import Data.Text.IO   (hGetLine, hPutStrLn, putStrLn)
-import Data.Text.Read (decimal)
-
-import System.Process (StdStream (CreatePipe), createProcess,
-                       proc, std_in, std_out)
+import           System.Process (StdStream (CreatePipe), createProcess, proc,
+                                 std_in, std_out)
 
 createProcessLLVM :: IO Int
 createProcessLLVM = do

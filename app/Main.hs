@@ -10,7 +10,7 @@ import           Control.Monad      (when, (>=>))
 
 import           GHC.Generics       (Generic)
 
-import           Options.Generic    (ParseRecord, getRecord, unHelpful, (<?>)(..))
+import           Options.Generic    (ParseRecord, (<?>)(..), getRecord, unHelpful)
 
 import           Rogue.Compiler     (compileFile, moduleToString, runModule)
 
@@ -23,7 +23,7 @@ instance ParseRecord CompilerOptions
 
 main :: IO ()
 main = do
-    CompilerOptions{..} <- getRecord "Rogue compiler, version: 0.1"
+    CompilerOptions {..} <- getRecord "Rogue compiler, version: 0.1"
     let filePath  = unHelpful file
     let isVerbose = unHelpful verbose
 

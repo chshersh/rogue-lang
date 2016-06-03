@@ -1,6 +1,13 @@
-module Rogue.AST.Untyped where
+module Rogue.AST.Untyped
+    ( FunctionType
+    , Program
+    , Statements
+    , Declaration (..)
+    , Expr (..)
+    , Statement (..)
+    ) where
 
-import Rogue.Parser.Tokens
+import           Rogue.Parser.Tokens (Identifier, MutabilityToken, TypeToken)
 
 type Program      = [Declaration]
 type FunctionType = [(Identifier, TypeToken)]
@@ -36,17 +43,17 @@ data Expr
     | Or  Expr Expr
     | Not Expr
 
-    {- Cmp blocks -} 
+    {- Cmp blocks -}
     | Equal     Expr Expr
     | NotEqual  Expr Expr
     | LowerEq   Expr Expr
     | Lower     Expr Expr
     | GreaterEq Expr Expr
-    | Greater   Expr Expr 
+    | Greater   Expr Expr
 
     {- Math block -}
-    | Plus     Expr Expr 
-    | Minus    Expr Expr 
+    | Plus     Expr Expr
+    | Minus    Expr Expr
     | Times    Expr Expr
     | Division Expr Expr
     | Modulo   Expr Expr
@@ -55,7 +62,7 @@ data Expr
 
     {- Constant values -}
     | IntConst  Int
-    | BoolConst Bool  
+    | BoolConst Bool
     | VarExpr   Identifier  -- TODO: remove in favor of VarOrCall?
 
     {- Function or var -}

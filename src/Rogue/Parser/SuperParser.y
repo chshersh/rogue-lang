@@ -1,10 +1,18 @@
 {
-module Rogue.Parser.SuperParser (parseRogue) where
+module Rogue.Parser.SuperParser
+    ( parseRogue
+    ) where
 
-import Rogue.Parser.ParserMonad
-import Rogue.Parser.Tokens
-import Rogue.Parser.Lexer
-import Rogue.AST.Untyped
+import           Rogue.Parser.Lexer       (lexer)
+import           Rogue.Parser.ParserMonad (ParserM, reportError)
+import           Rogue.Parser.Tokens      (BracesToken (..), CmpToken (..),
+                                           ControlFlowToken (..),
+                                           LogicalToken (..), MathToken (..),
+                                           MutabilityToken (..), SeparateToken (..),
+                                           StatementToken (..), Token (..),
+                                           TypeToken (..), ValueToken (..))
+import           Rogue.AST.Untyped        (Declaration (..), Expr (..), FunctionType,
+                                           Program, Statement (..), Statements)
 }
 
 %name parseRogue
@@ -14,13 +22,13 @@ import Rogue.AST.Untyped
 %lexer { lexer } { Sep TokenEOF }
 %error { parseError }
 
-%token 
+%token
     let             { Mut TokenLet }
     mut             { Mut TokenMut }
-      
+
     int             { Val (TokenInt $$) }
-    bool            { Val (TokenBool $$) }  
-      
+    bool            { Val (TokenBool $$) }
+
     var             { Var $$ }
 
     'Bool'          { Ty TokenBoolType }
@@ -79,15 +87,15 @@ ProgramFile : GlobalStatements { concat $ reverse $1 }
 
 GlobalStatements :: { [Program] }
 GlobalStatements : {- empty -}                    {      [] }
-                 | GlobalStatements eol           {      $1 } -- TODO: problems with file not ending with \n
+                 | GlobalStatements eol           {      $1 }
                  | GlobalStatements GlobalStmt    { $2 : $1 }
-           
+
 GlobalStmt :: { Program }
 GlobalStmt : VarStmt    { $1 }
            | FunStmt    { $1 }
 
 StmtEnd :: { () }
-StmtEnd : eol   { () } 
+StmtEnd : eol   { () }
         | ';'   { () }
 
 {- Variabels definition -}
@@ -125,7 +133,7 @@ Expr : Expr '&&' Expr           { And $1 $3 }
 
      | FunCall                  { $1 }
      | ExprAtom                 { $1 }
-     
+
 ExprAtom :: { Expr }
 ExprAtom : int             { IntConst  $1 }
          | bool            { BoolConst $1 }
@@ -141,7 +149,7 @@ FunArgsList : {- empty -}             {                   [] }
 
 {- Type section -}
 OptionalType :: { Maybe TypeToken }
-OptionalType : ':' BasicType    { Just $2 }  -- TODO: only simple types allowed for variable now 
+OptionalType : ':' BasicType    { Just $2 }  -- TODO: only simple types allowed for variable now
              -- | {- empty -}      { Nothing }
 
 BasicType :: { TypeToken }
