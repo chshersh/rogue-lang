@@ -1,0 +1,183 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage{cmap}					% поиск в PDF
+\usepackage[T2A]{fontenc}			% кодировка
+\usepackage[utf8]{inputenc}			% кодировка исходного текста
+\usepackage[english]{babel}	% локализация и переносы
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{bm}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\setlength\parindent{0pt}
+
+%\definecolor{darkOrange}{RGB}{255, 129, 0}
+\definecolor{lightGray}{RGB}{236, 236, 236}
+\definecolor{myGreen}{rgb}{0,0.6,0}
+\definecolor{darkBlue}{RGB}{27,0,116}
+
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+
+\renewcommand{\lstlistingname}{Listing}
+\lstset{%
+    backgroundcolor=\color{lightGray},
+    commentstyle=\itshape\color{myGreen},
+    extendedchars=true,
+    keywordstyle=\bfseries\color{darkBlue},
+    language=Java,
+    otherkeywords={let,mut,pure,dirty,then,else,Int,Double,Bool,true,false,skip},
+    numbers=left, % where to put the line-numbers; possible values are (none, left, right)
+    numbersep=5pt
+    %stringstyle=\color{mymauve}
+}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Spec title
+\title{\textbf{Rogue} programming languages specs}
+\author{Dmitry Kovanikov}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Implementation language:} Haskell\\
+
+\textbf{Target platform:} LLVM\\
+
+\section*{Language features}
+
+\textbf{Rogue} programming language is mix of imperative and functional paradigms. You can write algorithms step by step. But language has plenty of functional features. It's statically typed with local type inference. 
+
+As a general purpose programming language it has commonly used set of basics:
+
+\begin{enumerate}
+\item Variable declaration.
+\item Basic arithmetic, logic and comparison operations.
+\item Function declaration and calling.
+\item Primitive types: Int, Bool, Double, Unit (Word? String? BigInteger?)
+\end{enumerate}
+
+Imperative language features are:
+
+\begin{enumerate}
+\item Variables can be mutable and immutable.
+\item Named function arguments with default values.
+\item Control-flow constructs: if-then-else, while and for loops.
+\item TODO: Arrays with size in type?
+\end{enumerate}
+
+Functional language features are:
+
+\begin{enumerate}
+\item Pattern matching on constants.
+\item Higher-order functions.
+\item Anonymous functions.
+\item Currying and partial application.
+\item Classification of functions on pure and with side-effects.
+\item Algebraic immutable data types.
+\item TODO: parametric polymorphism.
+\end{enumerate}
+
+TODO: fully-compatible with Haskell.
+
+\section*{Syntax examples}
+
+\begin{lstlisting}[caption=Variables declaration]
+mut x: Int = 0
+mut y = 3
+let z = true   // `z` has type Bool
+y = 5
+\end{lstlisting}
+
+Using \textbf{mut} keyword you can create mutable variables, and with \textbf{let} --- immutable. Note, that you can omit type of variable, if it can be inferred from it's local context. But variable initialization is required.
+
+\begin{lstlisting}[caption=Function declaration]
+pure f : (x: Double) -> (y: Double) -> Double {
+    let z = x + y
+    return z
+}
+
+dirty 
+g : (b: Bool) -> (mut x: Int) -> (y: Int = 5) -> Int 
+g (..) = {
+    if b { x += y }
+    return x
+}
+\end{lstlisting}
+
+Arguments of functions separated with $\rightarrow$ symbol. They should have names and type. Arguments can have default values. Last type doesn't have name "--- it is the type of function result. All functions should be marked either \textbf{pure} or \textbf{dirty}. If function has side-effects (changes some of it's arguments or some global variables or does some IO) then it should be marked as \textbf{dirty}. Function block should have \textbf{return} keyword if result type of function is not \textbf{Unit}.
+
+Next calls of function \texttt{g} are valid:
+
+\begin{lstlisting}[caption=Function calls]
+g true someX 4 
+g true someX    // creates function with type `Int -> Int`
+g(b = true, x = someX)  // calls `g` with `y = 5`
+g(x = someX)  // creates function with type Bool -> Int
+g() // creates function with type `Bool -> mut Int -> Int`
+\end{lstlisting}
+
+So \texttt{g \{x = someX\} true} is valid call whereas \texttt{g true \{x = someX\}} is not
+because partial function application loses all information about arguments names. Though by convention you shouldn't write \texttt{g \{x = someX\} true} because it's less obvious what this function call does.
+
+TODO: Call like \texttt{g(..) }
+
+Functions also can perform pattern matching, have guards, etc.
+
+\begin{lstlisting}[caption=Pattern matching]
+dirty h : (b: Bool) -> (mut x: Int) -> (y: Int) -> Int
+h (y = 0) = {
+    x = x - 3
+    let a = x / 2
+    return x + a
+}
+h (y = 1) 
+    | x > 1 = x - 1
+    | else  = { let t = x % 2; return t }
+h false 1 _ = x + 10  // `y` is not available here
+h true (..) = y + 10  // {..} for keeping rest arguments names
+h (..) = x + 1
+\end{lstlisting}
+
+Here's example of function that reads two integers from input and performs binary pow aglorithm.
+
+\begin{lstlisting}[caption=Binary pow algorithm]
+dirty binPow : Unit {
+    mut k = readInt()
+    mut n = readInt()
+    mut res = 1
+    while k > 0 {
+        if k % 2 == 1 {  
+            res *= n
+        } else {
+            skip // `skip` is empty operator
+        }
+        n = n * n
+        k = k / 2
+    }
+    print res
+}
+\end{lstlisting}
+
+Example of calling with higher-order functions.
+
+\begin{lstlisting}[caption=Higher order functions]
+dirty decrementAndCheck : (mut x: Int) 
+                       -> (p: mut Int -> Int -> Bool) 
+                       -> Bool 
+{
+    x = x - 1
+    return (p x 3)  
+}
+\end{lstlisting}
+\end{document}
