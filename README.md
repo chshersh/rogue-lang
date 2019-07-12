@@ -4,7 +4,7 @@ Compiler of my programming language: Rogue
 ## Implementation details:
 + Implementation language: [Haskell](https://www.haskell.org/)
 + Target platform: [LLVM](http://llvm.org/)
-+ Language specification: [Spec.pdf](https://github.com/ChShersh/rogue-lang/blob/master/spec/Spec.pdf)
++ Language specification: [Spec.pdf](https://github.com/chshersh/rogue-lang/blob/master/spec/rogue-lang-spec.pdf)
 
 ## How to build and run
 Use [stack](http://docs.haskellstack.org/en/stable/README/) build tool in this directory:
