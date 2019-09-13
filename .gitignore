@@ -15,6 +15,7 @@ cabal.sandbox.config
 *.hp
 .stack-work/
 
+
 *.un~
 .DS_Store
 
