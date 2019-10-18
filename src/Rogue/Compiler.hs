@@ -24,6 +24,8 @@ compileFile inputFileName = do
     fileContent   <- readFile inputFileName
     let moduleName = takeBaseName inputFileName
     compileModule moduleName fileContent
+    
+foo x = bar x
 
 compileModule :: Identifier -> String -> IO Module
 compileModule moduleName moduleContent = do
